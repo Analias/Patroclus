@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:patroclus"
          xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                      
-        Title="Patroclus - Software Defined Radio Emulator" Height="350" Width="578">
+        Title="Patroclus - Software Defined Radio Emulator" Height="400" Width="578">
     <Window.Resources>
         <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
             <Setter Property="Template">
@@ -31,6 +31,7 @@
                          <ComboBoxItem IsSelected="True">HPSDR Hermes</ComboBoxItem>
                         <ComboBoxItem>HPSDR Hermes new protocol</ComboBoxItem>
                         <ComboBoxItem>Hermes Lite</ComboBoxItem>
+                        <ComboBoxItem>Hermes Lite 2</ComboBoxItem>
                     </ComboBox>
                 </StackPanel>
                 <Grid Background="AliceBlue">
@@ -48,7 +49,9 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-
+                        <TextBox ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                                 IsReadOnly="True" Height="50" Text="{Binding log}" ></TextBox>
 
 
                         <StackPanel Orientation="Horizontal">
@@ -62,11 +65,11 @@
 
                             <Label Content="UDP packets - sent" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
-                            <Label Content="{Binding Path=packetsSent}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-                           <Label Content="received" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                        <!--    <Label Content="{Binding Path=packetsSent}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+                        -->   <Label Content="received" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
-                            <Label Content="{Binding Path=packetsReceived}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
-
+                         <!--   <Label Content="{Binding Path=packetsReceived}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+-->
                             <Label Content="seq errs" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"  VerticalAlignment="Top" />
 
                             <Label Content="{Binding Path=seqErrors}" HorizontalAlignment="Left"  VerticalAlignment="Top" />

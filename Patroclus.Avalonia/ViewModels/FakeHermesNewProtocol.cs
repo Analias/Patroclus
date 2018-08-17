@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using ReactiveUI;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,10 +11,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Data;
+//using System.Windows.Data;
 using System.Windows.Input;
 
-namespace patroclus
+namespace Patroclus.Avalonia.ViewModels
 {
     public class FakeHermesNewProtocol : FakeRadio
     {
@@ -52,65 +54,66 @@ namespace patroclus
         bool running = false;
 
         double clk = 122880000;
+        private volatile bool closing = false;
 
         private int _RxSpecificPort = 1025;
         public int RxSpecificPort
         {
             get { return _RxSpecificPort; }
-            set { SetProperty(ref _RxSpecificPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _RxSpecificPort, value); }
         }
 
         private int _TxSpecificPort = 1026;
         public int TxSpecificPort
         {
             get { return _TxSpecificPort; }
-            set { SetProperty(ref _TxSpecificPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _TxSpecificPort, value); }
         }
         private int _HighPriorityFromPCPort = 1027;
         public int HighPriorityFromPCPort
         {
             get { return _HighPriorityFromPCPort; }
-            set { SetProperty(ref _HighPriorityFromPCPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _HighPriorityFromPCPort, value); }
         }
 
         private int _HighPriorityToPCPort = 1025;
         public int HighPriorityToPCPort
         {
             get { return _HighPriorityToPCPort; }
-            set { SetProperty(ref _HighPriorityToPCPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _HighPriorityToPCPort, value); }
         }
         private int _ReceiverAudioPort = 1028;
         public int ReceiverAudioPort
         {
             get { return _ReceiverAudioPort; }
-            set { SetProperty(ref _ReceiverAudioPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _ReceiverAudioPort, value); }
         }
         private int _Tx0IQPort = 1029;
         public int Tx0IQPort
         {
             get { return _Tx0IQPort; }
-            set { SetProperty(ref _Tx0IQPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _Tx0IQPort, value); }
         }
 
         private int _Rx0Port = 1035;
         public int Rx0Port
         {
             get { return _Rx0Port; }
-            set { SetProperty(ref _Rx0Port, value); }
+            set { this.RaiseAndSetIfChanged(ref _Rx0Port, value); }
         }
 
         private int _MicSamplesPort = 1026;
         public int MicSamplesPort
         {
             get { return _MicSamplesPort; }
-            set { SetProperty(ref _MicSamplesPort, value); }
+            set { this.RaiseAndSetIfChanged(ref _MicSamplesPort, value); }
         }
 
         private int _WidebandADC0Port = 1027;
         public int WidebandADC0Port
         {
             get { return _WidebandADC0Port; }
-            set { SetProperty(ref _WidebandADC0Port, value); }
+            set { this.RaiseAndSetIfChanged(ref _WidebandADC0Port, value); }
         }
         private int _clockError = 1000;
         public int clockError
@@ -121,7 +124,7 @@ namespace patroclus
                 //prevent system trying to correct timing from original start time
 
           //      resetTransmission();
-                SetProperty(ref _clockError, value);
+                this.RaiseAndSetIfChanged(ref _clockError, value);
             }
         }
         /*
@@ -142,67 +145,67 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
 
         public FakeHermesNewProtocol()
         {
-            BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
+   //         BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
 
         }
 
-        void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
-        {
-            BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
-        }
+    //    void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
+   //     {
+      //      BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
+    //    }
         private object _receiversLock = new object();
 
         private ObservableCollection<receiver> _receivers = new ObservableCollection<receiver>();
         public ObservableCollection<receiver> receivers
         {
             get { return _receivers; }
-            set { SetProperty(ref _receivers, value); }
+            set { this.RaiseAndSetIfChanged(ref _receivers, value); }
         }
 
         private int _bandwidth = 192000;
         public int bandwidth
         {
             get { return _bandwidth; }
-            set { SetProperty(ref _bandwidth, value); }
+            set { this.RaiseAndSetIfChanged(ref _bandwidth, value); }
         }
 
         private int _txNCO = 0;
         public int txNCO
         {
             get { return _txNCO; }
-            set { SetProperty(ref _txNCO, value); }
+            set { this.RaiseAndSetIfChanged(ref _txNCO, value); }
         }
 
         private bool _duplex = false;
         public bool duplex
         {
             get { return _duplex; }
-            set { SetProperty(ref _duplex, value); }
+            set { this.RaiseAndSetIfChanged(ref _duplex, value); }
         }
         private bool _adc1clip = false;
         public bool adc1clip
         {
             get { return _adc1clip; }
-            set { SetProperty(ref _adc1clip, value); }
+            set { this.RaiseAndSetIfChanged(ref _adc1clip, value); }
         }
 
         private string _status = "Off";
         public string status
         {
             get { return _status; }
-            set { SetProperty(ref _status, value); }
+            set { this.RaiseAndSetIfChanged(ref _status, value); }
         }
         private int _packetsSent = 0;
         public int packetsSent
         {
             get { return _packetsSent; }
-            set { SetProperty(ref _packetsSent, value); }
+            set { this.RaiseAndSetIfChanged(ref _packetsSent, value); }
         }
         private int _packetsReceived = 0;
         public int packetsReceived
         {
             get { return _packetsReceived; }
-            set { SetProperty(ref _packetsReceived, value); }
+            set { this.RaiseAndSetIfChanged(ref _packetsReceived, value); }
         }
 
 
@@ -245,7 +248,8 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
         }
         public override void Stop()
         {
-            handleCommsThread.Abort();
+            closing = true;
+           // handleCommsThread.Abort();
             generalClient.Client.Close();
             rxSpecificClient.Client.Close();
             txSpecificClient.Client.Close();
@@ -259,7 +263,7 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
         long actualPacketCount = 0;
         void handleComms()
         {
-            while (true)
+            while (!closing)
             {
                 while (!generalClient.msgQueue.IsEmpty)
                 {
@@ -308,54 +312,55 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                     {
                         
                         var rx = receivers[ri];
-                        
-                        double timeStep = 1.0 / rx.bandwidth;
-
-                        //calculate number of packets to maintain sync
-                        long nPacketsCalculated = rx.bandwidth / (nSamples) * totalTime / 1000;
-
-                        long packetsToSend = nPacketsCalculated - rx.packetCount;
-
-
-
-                        for (int i = 0; i < packetsToSend; i++)
+                        if (rx != null)
                         {
-                            int seqNo = rx.seq;
-                            rx.seq++;
-                            //sequence no
-                            databuf[0] = (byte)(seqNo >> 24);
-                            databuf[1] = (byte)((seqNo >> 16) & 0xff);
-                            databuf[2] = (byte)((seqNo >> 8) & 0xff);
-                            databuf[3] = (byte)(seqNo & 0xff);
-                            //timestamp
-                       /*     databuf[4] = (byte)(rx.timestamp>>56);
-                            databuf[5] = (byte)((rx.timestamp >> 48 ) & 0xff);
-                            databuf[6] = (byte)((rx.timestamp >> 40) & 0xff);
-                            databuf[7] = (byte)((rx.timestamp >> 32) & 0xff);
-                            databuf[8] = (byte)((rx.timestamp >> 24) & 0xff);
-                            databuf[9] = (byte)((rx.timestamp >> 16) & 0xff);
-                            databuf[10] = (byte)((rx.timestamp >> 8) & 0xff);
-                            databuf[11] = (byte)(rx.timestamp  & 0xff);
-                               
-                            rx.timestamp += (ulong)(clk * nSamples / rx.bandwidth);
-                            */
-                            //bits per sample
-                            databuf[12] = (byte)(0);
-                            databuf[13] = (byte)(24);
+                            double timeStep = 1.0 / rx.bandwidth;
 
-                            //no of samples
-                            databuf[14] = (byte)(nSamples >> 8);
-                            databuf[15] = (byte)(nSamples & 0xff);
+                            //calculate number of packets to maintain sync
+                            long nPacketsCalculated = rx.bandwidth / (nSamples) * totalTime / 1000;
 
-                            
-                          
-                            rx.GenerateSignal(databuf, 16, 6, nSamples, rx.timebase, timeStep);
-                            rxClients[rx].Send(databuf, databuf.Length, ClientIpEndPoint);
-                            rx.packetCount++;
-                            packetsSent++;
-                            rx.timebase += nSamples * timeStep;
+                            long packetsToSend = nPacketsCalculated - rx.packetCount;
+
+
+
+                            for (int i = 0; i < packetsToSend; i++)
+                            {
+                                int seqNo = rx.seq;
+                                rx.seq++;
+                                //sequence no
+                                databuf[0] = (byte)(seqNo >> 24);
+                                databuf[1] = (byte)((seqNo >> 16) & 0xff);
+                                databuf[2] = (byte)((seqNo >> 8) & 0xff);
+                                databuf[3] = (byte)(seqNo & 0xff);
+                                //timestamp
+                                /*     databuf[4] = (byte)(rx.timestamp>>56);
+                                     databuf[5] = (byte)((rx.timestamp >> 48 ) & 0xff);
+                                     databuf[6] = (byte)((rx.timestamp >> 40) & 0xff);
+                                     databuf[7] = (byte)((rx.timestamp >> 32) & 0xff);
+                                     databuf[8] = (byte)((rx.timestamp >> 24) & 0xff);
+                                     databuf[9] = (byte)((rx.timestamp >> 16) & 0xff);
+                                     databuf[10] = (byte)((rx.timestamp >> 8) & 0xff);
+                                     databuf[11] = (byte)(rx.timestamp  & 0xff);
+
+                                     rx.timestamp += (ulong)(clk * nSamples / rx.bandwidth);
+                                     */
+                                //bits per sample
+                                databuf[12] = (byte)(0);
+                                databuf[13] = (byte)(24);
+
+                                //no of samples
+                                databuf[14] = (byte)(nSamples >> 8);
+                                databuf[15] = (byte)(nSamples & 0xff);
+
+
+
+                                rx.GenerateSignal(databuf, 16, 6, nSamples, rx.timebase, timeStep);
+                                rxClients[rx].Send(databuf, databuf.Length, ClientIpEndPoint);
+                                rx.packetCount++;
+                                packetsSent++;
+                                rx.timebase += nSamples * timeStep;
+                            }
                         }
-
                         //seqNo++;
                         //actualPacketCount++;
                          
@@ -515,10 +520,9 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                         if (receiversByIdx[idx] == null)
                         {
                             receiversByIdx[idx] = new receiver("RX" + idx);
-                            lock (_receiversLock)
-                            {
-                                receivers.Add(receiversByIdx[idx]);
-                            }
+                            Dispatcher.UIThread.InvokeAsync(new Action(() => {
+                                    receivers.Add(receiversByIdx[idx]);
+                                }));
                             rxClients.Add(receiversByIdx[idx], new UdpClient(Rx0Port + idx));
                         }
                     }
@@ -526,14 +530,18 @@ Bits - [0]Time stamp, [1]VITA-49, [2]VNA mode
                     {
                         if (receiversByIdx[idx] != null)
                         {
-                            lock (_receiversLock)
-                            {
+                          //  lock (_receiversLock)
+                          //  {
                                 var rx = receiversByIdx[idx];
-                                receivers.Remove(rx);
+                               // receivers.Remove(rx);
+                                Dispatcher.UIThread.InvokeAsync(new Action(() => {
+                                    receivers.Remove(rx);
+                                }));
+
                                 rxClients[rx].Close();
                                 rxClients.Remove(rx);
                                 receiversByIdx[idx] = null;
-                            }
+                           // }
                         }
                     }
                     if (receiversByIdx[idx] != null)

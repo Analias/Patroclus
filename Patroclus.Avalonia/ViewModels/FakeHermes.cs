@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using ReactiveUI;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,10 +12,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Data;
+//using System.Windows.Data;
 using System.Windows.Input;
 
-namespace patroclus
+namespace Patroclus.Avalonia.ViewModels
 {
     public class FakeHermes : FakeRadio
     {
@@ -51,10 +53,12 @@ namespace patroclus
         
         private static int[] bandwidths={48000,96000,192000,384000};
 
+        volatile bool closing = false;
+
         public FakeHermes()
         {
           
-            BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
+      //      BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
            
             // make sine wave that fits perfectly in 512 samples so it works for all bandscope lengths
             // TODO make adjustable generator for this
@@ -71,11 +75,11 @@ namespace patroclus
             stopwatch.Start();
         }
 
-        void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
-        {
-            if(e.Collection==receivers)BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
-            else if(e.Collection==ccbits)BindingOperations.EnableCollectionSynchronization(ccbits, _ccbitsLock);
-        }
+  //      void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
+  //      {
+  //          if(e.Collection==receivers)BindingOperations.EnableCollectionSynchronization(receivers, _receiversLock);
+  //          else if(e.Collection==ccbits)BindingOperations.EnableCollectionSynchronization(ccbits, _ccbitsLock);
+  //      }
 
 
         private object _ccbitsLock = new object();
@@ -83,7 +87,7 @@ namespace patroclus
         public ObservableCollection<uint> ccbits
         {
             get { return _ccbits; }
-            set { SetProperty(ref _ccbits, value); }
+            set { this.RaiseAndSetIfChanged(ref _ccbits, value); }
         }
 
         private object _receiversLock = new object();
@@ -91,66 +95,66 @@ namespace patroclus
         public ObservableCollection<receiver> receivers
         {
             get{return _receivers;}
-            set{SetProperty(ref _receivers,value); }
+            set{this.RaiseAndSetIfChanged(ref _receivers,value); }
         }
 
         private int _bandwidth = 0;
         public int bandwidth
         {
             get { return _bandwidth; }
-            set { SetProperty(ref _bandwidth, value); }
+            set { this.RaiseAndSetIfChanged(ref _bandwidth, value); }
         }
 
         private int _txNCO = 0;
         public int txNCO
         {
             get{ return _txNCO;}
-            set{ SetProperty(ref _txNCO,value); }
+            set{ this.RaiseAndSetIfChanged(ref _txNCO,value); }
         }
 
         private bool _duplex=false;
         public bool duplex
         {
             get { return _duplex; }
-            set { SetProperty(ref _duplex, value); }
+            set { this.RaiseAndSetIfChanged(ref _duplex, value); }
         }
         private bool _adc1clip = false;
         public bool adc1clip
         {
             get { return _adc1clip; }
-            set { SetProperty(ref _adc1clip, value); }
+            set { this.RaiseAndSetIfChanged(ref _adc1clip, value); }
         }
 
         private string _status ="Off";
         public string status
         {
             get { return _status; }
-            set { SetProperty(ref _status, value); }
+            set { this.RaiseAndSetIfChanged(ref _status, value); }
         }
         private string _log = "";
         public string log
         {
             get { return _log; }
-            set { SetProperty(ref _log, value); }
+            set { this.RaiseAndSetIfChanged(ref _log, value); }
         }
         
         private int _packetsSent = 0;
         public int packetsSent
         {
             get { return _packetsSent; }
-            set { SetProperty(ref _packetsSent, value); }
+            set { this.RaiseAndSetIfChanged(ref _packetsSent, value); }
         }
         private int _packetsReceived = 0;
         public int packetsReceived
         {
             get { return _packetsReceived; }
-            set { SetProperty(ref _packetsReceived, value); }
+            set { this.RaiseAndSetIfChanged(ref _packetsReceived, value); }
         }
         private int _seqErrors = 0;
         public int seqErrors
         {
             get { return _seqErrors; }
-            set { SetProperty(ref _seqErrors, value); }
+            set { this.RaiseAndSetIfChanged(ref _seqErrors, value); }
         }
         private int _clockError = 1000;
         public int clockError
@@ -161,7 +165,7 @@ namespace patroclus
                 //prevent system trying to correct timing from original start time
 
                 resetTransmission();
-                SetProperty(ref _clockError, value); 
+                this.RaiseAndSetIfChanged(ref _clockError, value); 
             }
         }
         public void start()
@@ -173,8 +177,9 @@ namespace patroclus
             byte[] outValue = new byte[] { 0 };
             client.Client.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
 
-            client.BeginReceive(new AsyncCallback(incomming), null);
-       
+            ///client.BeginReceive(new AsyncCallback(incomming), null);
+            readUDP(client);
+
             handleCommsThread = new Thread(handleComms);
             handleCommsThread.IsBackground = true;
             handleCommsThread.Priority = ThreadPriority.AboveNormal;
@@ -183,16 +188,19 @@ namespace patroclus
         }
         public override void Stop()
         {
-            handleCommsThread.Abort();
+            //  handleCommsThread.Abort();
+            closing = true;
+
             client.Close();
             
             base.Stop();
         }
         long actualPacketCount = 0;
         int txReturnState = 0;
+        int bandScopeHoldoff = 0;
         void handleComms()
         {
-            while (true)
+            while (!closing)
             {
                 while (!msgQueue.IsEmpty)
                 {
@@ -282,11 +290,14 @@ namespace patroclus
                         packetsSent++;
                     }
                 }
-             //   long nBsPacketsCalculated = 48000 / 512 * totalTime / 1000;
-             //   uint BsPacketsToSend = ((uint)nBsPacketsCalculated) - seqNoBs;
-             //   for (int i = 0; i < BsPacketsToSend; i++)
-                   if(bsrunning) sendBandscope();
-
+                //   long nBsPacketsCalculated = 48000 / 512 * totalTime / 1000;
+                //   uint BsPacketsToSend = ((uint)nBsPacketsCalculated) - seqNoBs;
+                //   for (int i = 0; i < BsPacketsToSend; i++)
+                if (bsrunning && bandScopeHoldoff++ > 10)
+                {
+                    bandScopeHoldoff = 0;
+                    sendBandscope();
+                }
                 Thread.Sleep(1);
             }
         }
@@ -367,6 +378,35 @@ namespace patroclus
            timebase += nSamples*timestep;
                 
         }
+
+        ConcurrentStack<receivedPacket> rxBuffers = new ConcurrentStack<receivedPacket>();
+        private void readUDP(UdpClient udpClient)
+        {
+            
+            Task.Run(async () =>
+            {
+                while (!closing)
+                {
+
+                    //todo reuse buffers 
+                    receivedPacket buff = null;
+                    if(!rxBuffers.TryPop(out buff))
+                    { 
+                        buff= new receivedPacket() { received = new byte[1032] };
+                    }
+
+                    //  var received = await udpClient.Client.ReceiveAsync(buff, SocketFlags.None );
+                    var remEndPoint = new IPEndPoint(IPAddress.Any,0);
+                    var received = await udpClient.Client.ReceiveMessageFromAsync(buff.received, SocketFlags.None, remEndPoint);
+
+
+                    //     var received = await udpClient.ReceiveAsync();
+                    buff.endPoint = (IPEndPoint)received.RemoteEndPoint;
+                    msgQueue.Enqueue(buff);
+                }
+            });
+        }
+
         private void incomming(IAsyncResult res)
         {
             IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, port);
@@ -392,13 +432,13 @@ namespace patroclus
             {
             }
         }
-        System.IO.StreamWriter logf = null;
+        //System.IO.StreamWriter logf = null;
         int logLen = 20;
 
         public void handlePacket(receivedPacket packet)
         {
             byte[] received = packet.received;
-
+            /*
             if (logLen > 0)
             {
                 if(logf==null)logf=System.IO.File.CreateText("hllog.txt");
@@ -412,7 +452,7 @@ namespace patroclus
                 logLen--;
                 if (logLen == 0) logf.Dispose();
             }
-
+            */
             if (received[2] == 2)
             {
                 //discovery
@@ -523,6 +563,7 @@ namespace patroclus
             }
             else { }
 
+            rxBuffers.Push(packet);
         }
         void resetTransmission()
         {
@@ -535,7 +576,16 @@ namespace patroclus
        //     Console.WriteLine(string.Format("{0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4));
 
             int index=c0>>1;
-            if (index < ccbits.Count) ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
+            if (index < ccbits.Count)
+            {
+                uint newVal= ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
+
+                if (newVal != ccbits[index])
+                {
+                    Dispatcher.UIThread.InvokeAsync(new Action(() => { ccbits[index] = newVal; }));
+                }
+//   ccbits[index] = ((uint)c1 << 24) | ((uint)c2 << 16) | ((uint)c3 << 8) | (uint)c4;
+            }
             bool tx = ((c0 & 1) == 1);
             if (tx != txing)
             {
@@ -562,12 +612,14 @@ namespace patroclus
                     
                     if(nReceivers!=receivers.Count)
                     {
-                        lock (_receiversLock)
-                        {
-                            while (receivers.Count > nReceivers) receivers.Remove(receivers.Last());
-                            while (receivers.Count < nReceivers) receivers.Add(new receiver("RX" + (receivers.Count + 1)));
-                        }
-                                           
+                     //   lock (_receiversLock)
+                     //   {
+                            Dispatcher.UIThread.InvokeAsync(new Action(() => { 
+                                while (receivers.Count > nReceivers) receivers.Remove(receivers.Last());
+                                while (receivers.Count < nReceivers) receivers.Add(new receiver("RX" + (receivers.Count + 1)));
+                            }));
+                        //   }
+
                         resetTransmission();    
                     }
                     break;
@@ -650,7 +702,7 @@ namespace patroclus
                 case 122: log += string.Format("I2C2 {0:x2} {1:x2} {2:x2} {3:x2} {4:x2}\r\n", c0, c1, c2, c3, c4); break; 
 
 
-             //   default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
+ //               default: Console.WriteLine(string.Format("Unhandled Control message {0}\t{1}\t{2}\t{3}\t{4}", c0, c1, c2, c3, c4)); break;
 
             }
         }

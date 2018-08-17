@@ -1,96 +1,97 @@
-﻿using System;
+﻿using ReactiveUI;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Data;
+//using System.Windows.Data;
 using System.Windows.Input;
 
-namespace patroclus
+namespace Patroclus.Avalonia.ViewModels
 {
-    public class receiver : BindableBase
+    public class receiver : ViewModelBase
     {
         const int max24int = 0x7fffff;
         const int min24int = -0x800000;
 
         public receiver(string name)
         {
-            BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
+    //        BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
             this.name = name;
             AddSine();
             AddSine();
             AddWav();
         }
 
-        void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
-        {
-            BindingOperations.EnableCollectionSynchronization(generators, _generatorsLock);
-        }
+  //      void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
+   //     {
+   //         BindingOperations.EnableCollectionSynchronization(generators, _generatorsLock);
+    //    }
         private object _generatorsLock = new object();
 
         ObservableCollection<SignalGenerator> _generators = new ObservableCollection<SignalGenerator>();
         public ObservableCollection<SignalGenerator> generators
         {
             get { return _generators; }
-            set { SetProperty(ref _generators, value); }
+            set { this.RaiseAndSetIfChanged(ref _generators, value); }
         }
 
         private int _seq=0;
         public int seq
         {
             get { return _seq; }
-            set { SetProperty(ref _seq, value); }
+            set { this.RaiseAndSetIfChanged(ref _seq, value); }
         }
         private long _packetCount = 0;
         public long packetCount
         {
             get { return _packetCount; }
-            set { SetProperty(ref _packetCount, value); }
+            set { this.RaiseAndSetIfChanged(ref _packetCount, value); }
         }
         private double _timebase = 0;
         public double timebase
         {
             get { return _timebase; }
-            set { SetProperty(ref _timebase, value); }
+            set { this.RaiseAndSetIfChanged(ref _timebase, value); }
         }
         private int _bandwidth = 0;
         public int bandwidth
         {
             get { return _bandwidth; }
-            set { SetProperty(ref _bandwidth, value); }
+            set { this.RaiseAndSetIfChanged(ref _bandwidth, value); }
         }
         private int _vfo;
         public int vfo
         {
             get { return _vfo; }
-            set { SetProperty(ref _vfo, value); }
+            set { this.RaiseAndSetIfChanged(ref _vfo, value); }
         }
         private string _name;
         public string name
         {
             get { return _name; }
-            set { SetProperty(ref _name, value); }
+            set { this.RaiseAndSetIfChanged(ref _name, value); }
         }
         private int _sampleSize=24;
         public int sampleSize 
         {
             get { return _sampleSize; }
-            set { SetProperty(ref _sampleSize, value); }
+            set { this.RaiseAndSetIfChanged(ref _sampleSize, value); }
         }
 
         private ulong _timestamp =0;
         public ulong timestamp
         {
             get { return _timestamp; }
-            set { SetProperty(ref _timestamp, value); }
+            set { this.RaiseAndSetIfChanged(ref _timestamp, value); }
         }
 
         private bool _adcClip=false;
         public bool adcClip
         {
             get { return _adcClip; }
-            set { SetProperty(ref _adcClip, value); }
+            set { this.RaiseAndSetIfChanged(ref _adcClip, value); }
         }
         RelayCommand _AddSineCommand;
         public ICommand AddSineCommand
